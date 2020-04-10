@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<script src="dist/bundle.js"></script>
+<body>
+  <div class="center-content">
+    <piano-keys
+      min="0"
+      max="24">
+    </piano-keys>
+    
+    <piano-keys
+      fixed="24">
+    </piano-keys>
+
+    <piano-keys
+      min="9"
+      max="97"
+      layout="classic">
+    </piano-keys>
+    
+    <piano-keys
+      fixed="24"
+      layout="classic">
+    </piano-keys>
+  </div>
+</body>
+<style>
+
+body {
+  background-color: rgb(243, 243, 243);
+}
+
+.center-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+piano-keys {
+  box-shadow: 0 0 40px 0 rgba(0, 0, 0, 0.28);
+  height: 20%;
+  max-height: 100px;
+}
+
+</style>
+</html>
