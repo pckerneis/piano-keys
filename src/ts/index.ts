@@ -1,4 +1,7 @@
-import audit from './utils/audit';
+declare class ResizeObserver {
+  constructor(...args : any[]);
+  observe(...elements: HTMLElement[]): any;
+}
 
 enum PianoKeysLayout {
   classic   = 'classic',
@@ -9,9 +12,59 @@ enum PianoKeysMode {
   toggle    = 'toggle',
   slide     = 'slide',
   default   = 'default',
+  none      = 'none',
+}
+
+interface KeyBounds {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 }
 
 class PianoKeys extends HTMLElement {
+  public strokeStyle: string = '#000';
+  public whiteKeyFillStyle: string = '#fff';
+  public whiteKeyHoverFillStyle: string = '#eee';
+  public whiteKeyOnFillStyle: string = '#ccc';
+  public blackKeyFillStyle: string = '#888';
+  public blackKeyHoverFillStyle: string = '#333';
+  public blackKeyOnFillStyle: string = '#111';
+
+  private static MIN_KEY_WIDTH = 5;
+
+  private _shadowRoot: ShadowRoot;
+  private _canvas: HTMLCanvasElement;
+  private _ctx: CanvasRenderingContext2D;
+  private _whiteKeyBounds: Map<number, KeyBounds> = new Map<number, KeyBounds>();
+  private _blackKeyBounds: Map<number, KeyBounds> = new Map<number, KeyBounds>();
+  private _keyOns: number[] = [];
+  private _hoveredKey: number = null;
+
+  constructor() {
+    super();
+    this._shadowRoot = this.attachShadow({mode: 'closed'});
+
+    this._canvas = document.createElement('canvas');
+    this._canvas.classList.add('piano-keyboard-canvas');
+
+    this._ctx = this._canvas.getContext('2d');
+
+    const style = document.createElement('style');
+    style.textContent = CSS_STYLE;
+
+    this._shadowRoot.append(style);
+    this._shadowRoot.append(this._canvas);
+
+    // Events handlers
+    const resizeObserver = new ResizeObserver(() => this.resize());
+    resizeObserver.observe(this);
+
+    this._canvas.addEventListener('mousedown', (event) => this.handleMouseDown(event));
+    document.addEventListener('mouseup', (event) => this.handleMouseUp(event));
+    this._canvas.addEventListener('mousemove', (event) => this.handleMouseMove(event));
+    this._canvas.addEventListener('mouseleave', (event) => this.handleMouseLeave(event));
+  }
 
   static get observedAttributes() { 
     return [
@@ -22,6 +75,15 @@ class PianoKeys extends HTMLElement {
       'mode'
     ]; 
   }
+
+  private static isBlackKey(keyNumber: number) {
+    return [1, 3, 6, 8, 10].includes(keyNumber % 12);
+  }
+
+  public get keyOns(): number[] {
+    return this._keyOns;
+  }
+
 
   public get start(): number {
     return this.getNumberAttribute('start');
@@ -59,41 +121,141 @@ class PianoKeys extends HTMLElement {
     return this.getStringAttribute('mode');
   }
 
-  public set mode(newValue: string) {
-    this.setAttribute('mode', newValue);
+  public get hoveredKey(): number {
+    return this._hoveredKey;
   }
 
-  private _shadowRoot: ShadowRoot;
+  public set mode(newValue: string) {
+    if (this.mode !== newValue) {
+      this.setAttribute('mode', newValue);
+      this._keyOns = [];
+      this._hoveredKey = null;
+      this.draw();
+    }
+  }
 
-  private _canvas: HTMLCanvasElement;
-
-  private _ctx: CanvasRenderingContext2D;
-
-  private _whiteKeyColor: string  = '#fff';
-  private _whiteKeyOnColor: string  = '#eee';
-
-  private _blackKeyColor: string  = '#444';
-  private _blackKeyOnColor: string  = '#000';
-  private _strokeColor: string    = '#000';
+  public connectedCallback() {
+    this.resize();
+  }
   
-  private static MIN_KEY_WIDTH = 5;
+  public attributeChangedCallback(/* name, oldValue, newValue */) {
+    this.draw();
+  }
 
-  constructor() {
-    super();
-    this._shadowRoot = this.attachShadow({mode: 'closed'});
+  private handleMouseDown(event: MouseEvent) {
+    const mode = this.mode;
 
-    this._canvas = document.createElement('canvas');
-    this._canvas.classList.add('piano-keyboard-canvas');
+    if (mode === 'none') {
+      return;
+    }
 
-    this._ctx = this._canvas.getContext('2d');
+    const mouseX = event.offsetX;
+    const mouseY = event.offsetY;
 
-    const style = document.createElement('style');
-    style.textContent = CSS_STYLE;
+    const keyPressed = this.getKeyAtPosition(mouseX, mouseY);
 
-    this._shadowRoot.append(style);
-    this._shadowRoot.append(this._canvas);
+    if (keyPressed != null) {
+      if (mode === 'toggle') {
+        if (this._keyOns.includes(keyPressed)) {
+          this._keyOns = this._keyOns.filter((v) => v !== keyPressed);
+        } else {
+          this._keyOns = [...this._keyOns, keyPressed];
+        }
 
-    window.addEventListener('resize', audit(() => this.resize()));
+        this.notifyKeyChange();
+      } else {
+        this._keyOns = [keyPressed];
+        this.notifyKeyChange();
+      }
+    }
+
+    this.draw();
+  }
+
+  private handleMouseUp(event: MouseEvent) {
+    const mode = this.mode;
+
+    if (mode === 'none') {
+      return;
+    }
+
+    if (mode !== 'toggle') {
+      this._keyOns = [];
+      this.notifyKeyChange();
+    }
+
+    this.draw();
+  }
+
+  private handleMouseMove(event: MouseEvent) {
+    const mode = this.mode;
+
+    if (mode === 'none') {
+      return;
+    }
+
+    const mouseX = event.offsetX;
+    const mouseY = event.offsetY;
+
+    const newHoveredKey = this.getKeyAtPosition(mouseX, mouseY);
+
+    if (this._hoveredKey != newHoveredKey) {
+      this._hoveredKey = newHoveredKey;
+      this.dispatchEvent(new CustomEvent('keyhover'));
+    }
+
+    if (mode === 'none') {
+      this.draw();
+      return;
+    }
+
+    let changed = false;
+
+    if (event.buttons == 0 && mode != 'toggle') {
+      if (this._keyOns.length > 0) {
+        this._keyOns = [];
+        changed = true;
+      }
+    } else {
+      if (mode === 'slide') {
+        if (this._keyOns.length !== 1 || this._keyOns[0] !== this._hoveredKey) {
+          this._keyOns = [this._hoveredKey];
+          changed = true;          
+        }
+      }
+    }
+
+    if (changed) {
+      this.notifyKeyChange();
+    }
+
+    this.draw();
+  }
+
+  private handleMouseLeave(event: MouseEvent) {
+    this._hoveredKey = null;
+    this.dispatchEvent(new CustomEvent('keyhover'));
+    
+    this.draw();
+  }
+
+  private getKeyAtPosition(x: number, y: number): number {
+    let result = null;
+
+    [...this._blackKeyBounds.entries(), ...this._whiteKeyBounds.entries()].some(entry => {
+      const bounds: KeyBounds = entry[1];
+      if (x >= bounds.x && x < bounds.x + bounds.width
+          && y >= bounds.y && y < bounds.y + bounds.height) {
+        result = entry[0];
+        return true;
+      }
+    });
+
+    return result;
+  }
+
+  private notifyKeyChange(): void {
+    this.dispatchEvent(new CustomEvent('keychange'));
   }
 
   private resize(): void {
@@ -103,15 +265,10 @@ class PianoKeys extends HTMLElement {
     this.draw();
   }
 
-  connectedCallback() {
-    this.resize();
-  }
-  
-  attributeChangedCallback(/* name, oldValue, newValue */) {
-    this.draw();
-  }
+  public draw() {
+    this._whiteKeyBounds.clear();
+    this._blackKeyBounds.clear();
 
-  private draw() {
     switch(this.layout) {
       case PianoKeysLayout.classic:
         this.drawClassic(this._canvas.width, this._canvas.height);
@@ -122,13 +279,13 @@ class PianoKeys extends HTMLElement {
   }
 
   private drawLinear(width: number, height: number) {
-    const startNote = this.start;
-    const endNote = Math.max(this.end, startNote + 2);
+    const startKey = this.start;
+    const endKey = Math.max(this.end, startKey + 2);
 
     let range, keyWidth;
 
     if (this.fixed == null || this.fixed <= 0) {
-      range = endNote - startNote;
+      range = 1 + endKey - startKey;
       keyWidth = width / range;
     } else {
       keyWidth = Math.max(PianoKeys.MIN_KEY_WIDTH, this.fixed);
@@ -138,13 +295,32 @@ class PianoKeys extends HTMLElement {
     let currentStep = 0;
 
     while (currentStep < range) {
-      const currentNote = currentStep + startNote;
-      this._ctx.fillStyle = PianoKeys.isBlackKey(currentNote) ? this._blackKeyColor : this._whiteKeyColor;
-      this._ctx.fillRect(Math.floor(currentStep * keyWidth), 0, keyWidth + 1, height);
+      const currentKey = currentStep + startKey;
+      const x = Math.floor(currentStep * keyWidth);
+
+      this.drawKey(currentKey, {
+        x,
+        y: 0,
+        width: keyWidth, 
+        height
+      });
       
       if (currentStep > 0) {
-        this._ctx.fillStyle = this._strokeColor;
-        this._ctx.fillRect(Math.floor(currentStep * keyWidth), 0, 1, height);
+        this._ctx.fillStyle = this.strokeStyle;
+        this._ctx.fillRect(x, 0, 1, height);
+      }
+
+      const bounds: KeyBounds = {
+        x,
+        y: 0, 
+        width: keyWidth,
+        height
+      };
+
+      if (PianoKeys.isBlackKey(currentKey)) {
+        this._blackKeyBounds.set(currentKey, bounds);
+      } else {
+        this._whiteKeyBounds.set(currentKey, bounds);
       }
 
       currentStep++;
@@ -152,22 +328,22 @@ class PianoKeys extends HTMLElement {
   }
 
   private drawClassic(width: number, height: number) {
-    let startNote = this.start;
+    let startKey = this.start;
 
-    if (PianoKeys.isBlackKey(startNote)) {
-      startNote--;
+    if (PianoKeys.isBlackKey(startKey)) {
+      startKey--;
     }
 
-    let endNote = Math.max(this.end, startNote + 2);
+    let endKey = Math.max(this.end, startKey + 2);
 
-    if (PianoKeys.isBlackKey(endNote)) {
-      endNote++;
+    if (PianoKeys.isBlackKey(endKey)) {
+      endKey++;
     }
 
     let range, whiteKeyWidth, numWhiteKeys;
 
     if (this.fixed == null || this.fixed <= 0) {
-      range = endNote - startNote;
+      range = 1 + endKey - startKey;
       numWhiteKeys = Math.round(range * (7 / 12));
       whiteKeyWidth = width / numWhiteKeys;
     } else {
@@ -176,38 +352,56 @@ class PianoKeys extends HTMLElement {
       range = Math.ceil(numWhiteKeys * (12 / 7));
     }
 
-    // Background
-    this._ctx.fillStyle = this._whiteKeyColor;
-    this._ctx.fillRect(0, 0, width, height);
-
-
-    // White key separations
-    this._ctx.fillStyle = this._strokeColor;
-
-    for (let i = 1; i < numWhiteKeys; ++i) {
-      const x = Math.floor(i * whiteKeyWidth);
-      this._ctx.fillRect(x, 0, 1, height);
-    }
-
-    // Black keys
     const blackKeyHeight = height * 0.65;
     const blackKeyWidth = Math.round(whiteKeyWidth * 0.58);
-    this._ctx.fillStyle = this._blackKeyColor;
     let whiteKeyCounter = 0;
 
+    // Determine key bounds
     for (let i = 0; i < range; ++i) {
-      if (PianoKeys.isBlackKey(i + startNote)) {
+      const currentKey = i + startKey;
+
+      if (PianoKeys.isBlackKey(currentKey)) {
         const nextWhiteX = whiteKeyCounter * whiteKeyWidth;
-        const x = nextWhiteX - blackKeyWidth * 0.5;
-        this._ctx.fillRect(x, 0, blackKeyWidth, blackKeyHeight);
+        const x = Math.round(nextWhiteX - blackKeyWidth * 0.5);
+        
+        this._blackKeyBounds.set(currentKey, {
+          x,
+          y: 0, 
+          width: blackKeyWidth,
+          height: blackKeyHeight
+        });
       } else {
+        const x = Math.round(whiteKeyCounter * whiteKeyWidth);
+
+        this._whiteKeyBounds.set(currentKey, {
+          x,
+          y: 0, 
+          width: whiteKeyWidth,
+          height
+        });
+
         whiteKeyCounter++;
       }
-    }
-  }
 
-  private static isBlackKey(noteNumber: number) {
-    return [1, 3, 6, 8, 10].includes(noteNumber % 12);
+      // Draw white keys
+      let first = true;
+
+      for (const e of this._whiteKeyBounds.entries()) {
+        this.drawKey(e[0], e[1]);
+
+        if (first) {
+          first = false;
+        } else {
+          this._ctx.fillStyle = this.strokeStyle;
+          this._ctx.fillRect(e[1].x, 0, 1, height);
+        }
+      }
+
+      // Draw black keys
+      for (const e of this._blackKeyBounds.entries()) {
+        this.drawKey(e[0], e[1]);
+      };
+    }
   }
 
   private getStringAttribute(key: string): string {
@@ -216,6 +410,28 @@ class PianoKeys extends HTMLElement {
 
   private getNumberAttribute(key: string): number {
     return this.hasAttribute(key) ? Number(this.getAttribute(key)) : null;
+  }
+
+  protected drawKey(keyNumber: number, keyBounds: KeyBounds) {
+    this._ctx.fillStyle = this.getFillStyle(keyNumber);
+    this._ctx.fillRect(keyBounds.x, keyBounds.y, keyBounds.width, keyBounds.height);
+
+    if (this.layout == 'classic' && PianoKeys.isBlackKey(keyNumber)) {
+      this._ctx.fillStyle = this.strokeStyle;
+      this._ctx.fillRect(Math.round(keyBounds.x), keyBounds.y, 1, keyBounds.height);
+      this._ctx.fillRect(Math.round(keyBounds.x), keyBounds.y + keyBounds.height - 1, keyBounds.width, 1);
+      this._ctx.fillRect(Math.round(keyBounds.x + keyBounds.width - 1), keyBounds.y, 1, keyBounds.height);
+    }
+  }
+
+  protected getFillStyle(keyNumber: number): string {
+    return PianoKeys.isBlackKey(keyNumber) ?
+        this._keyOns.includes(keyNumber) ? 
+            this.blackKeyOnFillStyle : (this._hoveredKey === keyNumber ?
+                this.blackKeyHoverFillStyle : this.blackKeyFillStyle) :
+        this._keyOns.includes(keyNumber) ? 
+            this.whiteKeyOnFillStyle : (this._hoveredKey === keyNumber ?
+                this.whiteKeyHoverFillStyle : this.whiteKeyFillStyle)
   }
 }
 

@@ -10,36 +10,8 @@
 <body>
   <div class="full-page">
     <div class="section">
-      <div class="flex-row top-row">
-        <label>
-          layout
-          <select id="select-layout">
-            <option value="classic">Classic</option>
-            <option value="linear">Linear</option>
-          </select>
-        </label>
 
-        <label>
-          mode
-          <select id="select-mode">
-            <option value="default">Default</option>
-            <option value="toggle">Toggle</option>
-            <option value="slide">Slide</option>
-          </select>
-        </label>
-
-        <label>
-          start/end
-          <input value="60" type="number" id="range-start" class="input-range" min="0" max="126" />
-          <input value="84" type="number" id="range-end" class="input-range" min="1" max="128" />
-        </label>
-
-        <label>
-          fixed
-          <input disabled value="50" type="number" id="input-fixed" class="input-range" min="20" max="200" />
-          <input id="checkbox-fixed" type="checkbox" />
-        </label>
-      </div>
+      <h1>PianoKeys.js</h1>
 
       <piano-keys
         start="60"
@@ -47,10 +19,50 @@
         layout="classic">
       </piano-keys>
 
-      <div class="flex-row bottom-row">
-        <input type="number" id="input-1"/>
+      <div class="events-row">
+        <span id="note-display">Pressed: none</span>
+        <span id="hover-display">Hovered: none</span>
       </div>
-    </div>
+      
+      <h3>Layout</h3>
+      <label>
+        layout
+        <select id="select-layout">
+          <option value="classic">classic</option>
+          <option value="linear">linear</option>
+        </select>
+      </label>
+
+      <label>
+        start
+        <input value="60" type="number" id="range-start" class="input-range" min="0" max="126" />
+      </label>
+
+      <label>
+        end
+        <input value="84" type="number" id="range-end" class="input-range" min="1" max="128" />
+      </label>
+
+      <label>
+        fixed
+        <input disabled value="50" type="number" id="input-fixed" class="input-range" min="20" max="200" />
+        <input id="checkbox-fixed" type="checkbox" />
+      </label>
+      
+      <h3>Mouse interaction</h3>
+      <label>
+        mode
+        <select id="select-mode">
+          <option value="default">default</option>
+          <option value="slide">slide</option>
+          <option value="toggle">toggle</option>
+          <option value="none">none</option>
+        </select>
+      </label>
+
+      <h3>Colors</h3>
+      <div id="colors-container">
+      </div>
   </div>
 
   <script>
@@ -60,23 +72,79 @@ document.addEventListener('DOMContentLoaded', () => {
   const layoutSelect = document.querySelector('#select-layout');
   const inputFixed = document.querySelector('#input-fixed');
   const checkboxFixed = document.querySelector('#checkbox-fixed');
+  const modeSelect = document.querySelector('#select-mode');
+  const noteDisplay = document.querySelector('#note-display');
+  const hoverDisplay = document.querySelector('#hover-display');
+  const colorsContainer = document.querySelector('#colors-container');
 
   rangeStart.addEventListener('change', () => refreshPiano());
   rangeEnd.addEventListener('change', () => refreshPiano());
   layoutSelect.addEventListener('change', () => refreshPiano());
   inputFixed.addEventListener('change', () => refreshPiano());
   checkboxFixed.addEventListener('change', () => refreshPiano());
+  modeSelect.addEventListener('change', () => refreshPiano());
 
   checkboxFixed.addEventListener('input', () => {
     inputFixed.disabled = ! checkboxFixed.checked;
+    rangeEnd.disabled = checkboxFixed.checked;
+  });
+
+  const pianoKeys = document.querySelector('piano-keys');
+  pianoKeys.addEventListener('keychange', () => {
+    console.log('keychange')
+    const notes = pianoKeys.keyOns.length == 0 ? 
+        'none' : pianoKeys.keyOns.map(key => midiNoteName(key)).join(', ');
+    noteDisplay.innerText = `Pressed: ${notes}`;
+  });
+
+  pianoKeys.addEventListener('keyhover', () => {
+    const note = midiNoteName(pianoKeys.hoveredKey);
+    hoverDisplay.innerText = `Hovered: ${note}`;
   });
 
   function refreshPiano() {
-    const pianoKeys = document.querySelector('piano-keys');
     pianoKeys.start = rangeStart.value;
     pianoKeys.end = rangeEnd.value;
     pianoKeys.layout = layoutSelect.value;
     pianoKeys.fixed = checkboxFixed.checked ? inputFixed.value : 0;
+    pianoKeys.mode = modeSelect.value;
+  }
+
+  function midiNoteName(noteNumber) {
+    if (noteNumber == null) {
+      return 'none'
+    }
+
+    const pitchNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const pitch = noteNumber % 12;
+    const octave = Math.floor(noteNumber / 12) - 2;
+    return pitchNames[pitch] + octave.toFixed(0);
+  }
+  
+  prepareColorPicker('whiteKeyFillStyle', '#ffffff');
+  prepareColorPicker('whiteKeyHoverFillStyle', '#eeeeee');
+  prepareColorPicker('whiteKeyOnFillStyle', '#cccccc');
+  prepareColorPicker('blackKeyFillStyle', '#888888');
+  prepareColorPicker('blackKeyHoverFillStyle', '#333333');
+  prepareColorPicker('blackKeyOnFillStyle', '#111111');
+  prepareColorPicker('strokeStyle', '#00000');
+
+  function prepareColorPicker(attributeName, defaultValue) {
+    const colorPicker = document.createElement('input');
+    colorPicker.type = 'color';
+    colorPicker.value = defaultValue;
+
+    const label = document.createElement('label');
+    const span = document.createElement('span');
+    span.innerText = attributeName;
+    label.append(span, colorPicker);
+
+    colorPicker.addEventListener('change', () => {
+      pianoKeys[attributeName] = colorPicker.value;
+      pianoKeys.draw();
+    });
+
+    colorsContainer.append(label);
   }
 });
   </script>
