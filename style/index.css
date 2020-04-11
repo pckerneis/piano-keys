@@ -116,6 +116,11 @@ pre {
   user-select: text;
   white-space: pre-wrap;
 }
+
+.github-link {
+  text-align: right;
+  position: relative;
+}
 /*====================================*/
 /*              Other
 /*====================================*/
