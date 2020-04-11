@@ -1,13 +1,14 @@
 {
-  "name": "PianoKeyboard",
+  "name": "piano-keys",
   "version": "0.0.1",
-  "description": "A piano keyboard web component",
+  "description": "A lightweight piano keyboard custom element",
   "author": "Pierre-Clément KERNEIS",
   "license": "LGPLv3",
   "scripts": {
     "webpack": "webpack --config webpack.config.js --display-error-details",
     "dev": "webpack-dev-server --open",
-    "dev-hot": "webpack-dev-server --open --hot"
+    "dev-hot": "webpack-dev-server --open --hot",
+    "karma": "karma start"
   },
   "private": true,
   "devDependencies": {
@@ -16,7 +17,20 @@
     "typescript": "^3.8.3",
     "webpack": "^4.42.1",
     "webpack-cli": "^3.3.11",
-    "webpack-dev-server": "^3.10.3"
+    "webpack-dev-server": "^3.10.3",
+    
+    "@types/jasmine": "^3.5.10",
+    "@webcomponents/webcomponentsjs": "^2.4.3",
+    "jasmine": "^3.5.0",
+    "karma": "^5.0.1",
+    "karma-chrome-launcher": "^3.1.0",
+    "karma-edge-launcher": "^0.4.2",
+    "karma-firefox-launcher": "^1.3.0",
+    "karma-jasmine": "^3.1.1",
+    "karma-sourcemap-loader": "^0.3.7",
+    "karma-spec-reporter": "^0.0.32",
+    "karma-typescript": "^5.0.2",
+    "karma-webpack": "^4.0.2"
   },
   "dependencies": {
   }
