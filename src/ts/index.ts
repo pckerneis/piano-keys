@@ -3,26 +3,26 @@ declare class ResizeObserver {
   observe(...elements: HTMLElement[]): any;
 }
 
-enum PianoKeysLayout {
+export enum PianoKeysLayout {
   classic   = 'classic',
   linear    = 'linear',
 }
 
-enum PianoKeysMode {
+export enum PianoKeysMode {
   toggle    = 'toggle',
   slide     = 'slide',
   default   = 'default',
   none      = 'none',
 }
 
-interface KeyBounds {
+export interface KeyBounds {
   x: number;
   y: number;
   width: number;
   height: number;
 }
 
-class PianoKeys extends HTMLElement {
+export class PianoKeys extends HTMLElement {
 
   private static MIN_KEY_WIDTH = 5;
 
@@ -59,6 +59,10 @@ class PianoKeys extends HTMLElement {
     this._canvas.addEventListener('mouseleave', (event) => this.handleMouseLeave(event));
   }
 
+  static get tag() {
+    return "piano-keys";
+  }
+
   static get observedAttributes() { 
     return [
       'start',
@@ -76,7 +80,7 @@ class PianoKeys extends HTMLElement {
     ]; 
   }
 
-  private static isBlackKey(keyNumber: number) {
+  public static isBlackKey(keyNumber: number) {
     return [1, 3, 6, 8, 10].includes(keyNumber % 12);
   }
 
@@ -317,7 +321,10 @@ class PianoKeys extends HTMLElement {
   private getKeyAtPosition(x: number, y: number): number {
     let result = null;
 
-    [...this._blackKeyBounds.entries(), ...this._whiteKeyBounds.entries()].some(entry => {
+    [
+      ...Array.from(this._blackKeyBounds.entries()),
+      ...Array.from(this._whiteKeyBounds.entries())
+    ].some(entry => {
       const bounds: KeyBounds = entry[1];
       if (x >= bounds.x && x < bounds.x + bounds.width
           && y >= bounds.y && y < bounds.y + bounds.height) {
@@ -461,7 +468,7 @@ class PianoKeys extends HTMLElement {
       // Draw white keys
       let first = true;
 
-      for (const e of this._whiteKeyBounds.entries()) {
+      for (const e of Array.from(this._whiteKeyBounds.entries())) {
         this.drawKey(e[0], e[1]);
 
         if (first) {
@@ -473,7 +480,7 @@ class PianoKeys extends HTMLElement {
       }
 
       // Draw black keys
-      for (const e of this._blackKeyBounds.entries()) {
+      for (const e of Array.from(this._blackKeyBounds.entries())) {
         this.drawKey(e[0], e[1]);
       };
     }
