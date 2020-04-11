@@ -1,7 +1,7 @@
 {
   "name": "piano-keys",
   "version": "0.0.1",
-  "description": "A piano keyboard web component",
+  "description": "Lightweight piano keyboard build with Custom Elements and Canvas APIs.",
   "author": "Pierre-Clément KERNEIS",
   "license": "LGPLv3",
   "scripts": {
