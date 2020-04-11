@@ -24,8 +24,9 @@
     "name": "PianoKeys API documentation",
     "includeVersion": true,
     "excludePrivate": true,
-    "excludeNotExported": false,
-    "exclude": "**/*+(index|.spec|.e2e|.test).ts"
+    "excludeNotExported": true,
+    "exclude": "**/*+(index|.spec|.e2e|.test).ts",
+    "readme": "./docs/README.md"
   }
 }
   

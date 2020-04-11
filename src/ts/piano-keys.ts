@@ -37,6 +37,7 @@ export interface KeyBounds {
  * ```
  * <piano-keys min="60" max="84" mode="slide"></piano-keys>
  * ```
+ * @noInheritDoc
  */
 export class PianoKeys extends HTMLElement {
 

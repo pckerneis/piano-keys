@@ -13,9 +13,10 @@
   "private": true,
   "devDependencies": {
     "@microsoft/tsdoc": "^0.12.18",
-    "typedoc": "^0.17.3",
     "ts-loader": "^6.2.2",
     "tslint": "^6.1.1",
+    "typedoc": "^0.17.3",
+    "typedoc-plugin-no-inherit": "^1.1.10",
     "typescript": "^3.8.3",
     "webpack": "^4.42.1",
     "webpack-cli": "^3.3.11",
