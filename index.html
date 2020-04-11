@@ -3,21 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
+  <title>PianoKeys demo page</title>
   <link rel="stylesheet" type="text/css" href="style/index.css">
 </head>
 <script src="dist/bundle.js"></script>
 <body>
   <div class="full-page">
     <div class="section">
+      <div class="header">
+        <h1>PianoKeys.js</h1>
+        <p>Lightweight piano keyboard build with Custom Elements and Canvas APIs.</p>
+      </div>
 
-      <h1>PianoKeys.js</h1>
-
-      <piano-keys
-        start="60"
-        end="84"
-        layout="classic">
-      </piano-keys>
+      <piano-keys start="60" end="84" layout="classic"></piano-keys>
 
       <div class="events-row">
         <span id="note-display">Pressed: none</span>
@@ -25,32 +23,32 @@
       </div>
       
       <h3>Layout</h3>
-      <label>
-        layout
-        <select id="select-layout">
-          <option value="classic">classic</option>
-          <option value="linear">linear</option>
-        </select>
-      </label>
-
-      <label>
-        start
-        <input value="60" type="number" id="range-start" class="input-range" min="0" max="126" />
-      </label>
-
-      <label>
-        end
-        <input value="84" type="number" id="range-end" class="input-range" min="1" max="128" />
-      </label>
-
-      <label>
-        fixed
-        <input disabled value="50" type="number" id="input-fixed" class="input-range" min="20" max="200" />
-        <input id="checkbox-fixed" type="checkbox" />
-      </label>
+      <div class="layout-row">
+        <label title="The keys layout, either 'classic' or 'linear' (default)">
+          layout
+          <select id="select-layout">
+            <option value="classic">classic</option>
+            <option value="linear">linear</option>
+          </select>
+        </label>
+  
+        <label title="First key to show">
+          start
+          <input value="60" type="number" id="range-start" class="input-range" min="0" max="126" />
+        </label>
+        <label title="Last key to show. Ignored if a strictly positive 'fixed' size was provided">
+          end
+          <input value="84" type="number" id="range-end" class="input-range" min="1" max="128" />
+        </label>
+        <label title="A fixed size in pixel for a key. In 'classic' mode, it is the width of a white key.">
+          fixed
+          <input disabled value="50" type="number" id="input-fixed" class="input-range" min="20" max="200" />
+          <input id="checkbox-fixed" type="checkbox" />
+        </label>
+      </div>
       
       <h3>Mouse interaction</h3>
-      <label>
+      <label title="Mouse interaction mode">
         mode
         <select id="select-mode">
           <option value="default">default</option>
@@ -61,10 +59,8 @@
       </label>
 
       <h3>Colors</h3>
-      <div id="colors-container">
-      </div>
+      <div id="colors-container"></div>
   </div>
-
   <script>
 document.addEventListener('DOMContentLoaded', () => {
   const rangeStart = document.querySelector('#range-start');
