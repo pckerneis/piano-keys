@@ -1,14 +1,66 @@
 import audit from './utils/audit';
 
+enum PianoKeysLayout {
+  classic   = 'classic',
+  linear    = 'linear',
+}
+
+enum PianoKeysMode {
+  toggle    = 'toggle',
+  slide     = 'slide',
+  default   = 'default',
+}
+
 class PianoKeys extends HTMLElement {
 
   static get observedAttributes() { 
     return [
-      'min',
-      'max',
+      'start',
+      'end',
       'layout',
-      'fixed'
+      'fixed',
+      'mode'
     ]; 
+  }
+
+  public get start(): number {
+    return this.getNumberAttribute('start');
+  }
+
+  public set start(newValue: number) {
+    this.setAttribute('start', '' + newValue);
+  }
+
+  public get end(): number {
+    return this.getNumberAttribute('end');
+  }
+
+  public set end(newValue: number) {
+    this.setAttribute('end', '' + newValue);
+  }
+
+  public get fixed(): number {
+    return this.getNumberAttribute('fixed');
+  }
+
+  public set fixed(newValue: number) {
+    this.setAttribute('fixed', '' + newValue);
+  }
+
+  public get layout(): PianoKeysLayout | string {
+    return this.getStringAttribute('layout');
+  }
+
+  public set layout(newValue: string) {
+    this.setAttribute('layout', newValue);
+  }
+
+  public get mode(): PianoKeysMode | string {
+    return this.getStringAttribute('mode');
+  }
+
+  public set mode(newValue: string) {
+    this.setAttribute('mode', newValue);
   }
 
   private _shadowRoot: ShadowRoot;
@@ -54,12 +106,14 @@ class PianoKeys extends HTMLElement {
   connectedCallback() {
     this.resize();
   }
+  
+  attributeChangedCallback(/* name, oldValue, newValue */) {
+    this.draw();
+  }
 
   private draw() {
-    const layout = this.getAttribute('layout');
-
-    switch(layout) {
-      case 'classic':
+    switch(this.layout) {
+      case PianoKeysLayout.classic:
         this.drawClassic(this._canvas.width, this._canvas.height);
         break;
       default:
@@ -68,17 +122,16 @@ class PianoKeys extends HTMLElement {
   }
 
   private drawLinear(width: number, height: number) {
-    const fixed = this.getAttribute('fixed');
-    const startNote = Number(this.getAttribute('min'));
-    const endNote = Math.max(Number(this.getAttribute('max')), startNote + 2);
+    const startNote = this.start;
+    const endNote = Math.max(this.end, startNote + 2);
 
     let range, keyWidth;
 
-    if (nullOrEmpty(fixed)) {
+    if (this.fixed == null || this.fixed <= 0) {
       range = endNote - startNote;
       keyWidth = width / range;
     } else {
-      keyWidth = Number(fixed);
+      keyWidth = Math.max(PianoKeys.MIN_KEY_WIDTH, this.fixed);
       range = Math.ceil(width / keyWidth);
     }
 
@@ -87,11 +140,11 @@ class PianoKeys extends HTMLElement {
     while (currentStep < range) {
       const currentNote = currentStep + startNote;
       this._ctx.fillStyle = PianoKeys.isBlackKey(currentNote) ? this._blackKeyColor : this._whiteKeyColor;
-      this._ctx.fillRect(Math.round(currentStep * keyWidth), 0, keyWidth, height);
+      this._ctx.fillRect(Math.floor(currentStep * keyWidth), 0, keyWidth + 1, height);
       
       if (currentStep > 0) {
         this._ctx.fillStyle = this._strokeColor;
-        this._ctx.fillRect(Math.round(currentStep * keyWidth), 0, 1, height);
+        this._ctx.fillRect(Math.floor(currentStep * keyWidth), 0, 1, height);
       }
 
       currentStep++;
@@ -99,27 +152,26 @@ class PianoKeys extends HTMLElement {
   }
 
   private drawClassic(width: number, height: number) {
-    const fixed = this.getAttribute('fixed');
-    let startNote = Number(this.getAttribute('min'));
+    let startNote = this.start;
 
     if (PianoKeys.isBlackKey(startNote)) {
       startNote--;
     }
 
-    let endNote = Math.max(Number(this.getAttribute('max')), startNote + 2);
+    let endNote = Math.max(this.end, startNote + 2);
 
-    if (PianoKeys.isBlackKey(startNote)) {
+    if (PianoKeys.isBlackKey(endNote)) {
       endNote++;
     }
 
     let range, whiteKeyWidth, numWhiteKeys;
 
-    if (nullOrEmpty(fixed)) {
+    if (this.fixed == null || this.fixed <= 0) {
       range = endNote - startNote;
-      numWhiteKeys = Math.floor(range * (7 / 12));
+      numWhiteKeys = Math.round(range * (7 / 12));
       whiteKeyWidth = width / numWhiteKeys;
     } else {
-      whiteKeyWidth = Math.max(Number(fixed), PianoKeys.MIN_KEY_WIDTH);
+      whiteKeyWidth = Math.max(this.fixed, PianoKeys.MIN_KEY_WIDTH);
       numWhiteKeys = Math.ceil(width / whiteKeyWidth);
       range = Math.ceil(numWhiteKeys * (12 / 7));
     }
@@ -127,6 +179,7 @@ class PianoKeys extends HTMLElement {
     // Background
     this._ctx.fillStyle = this._whiteKeyColor;
     this._ctx.fillRect(0, 0, width, height);
+
 
     // White key separations
     this._ctx.fillStyle = this._strokeColor;
@@ -137,15 +190,18 @@ class PianoKeys extends HTMLElement {
     }
 
     // Black keys
-    const blackKeyHeight = height * 0.71;
-    const blackKeyWidth = Math.round(whiteKeyWidth * 0.85);
-
+    const blackKeyHeight = height * 0.65;
+    const blackKeyWidth = Math.round(whiteKeyWidth * 0.58);
     this._ctx.fillStyle = this._blackKeyColor;
+    let whiteKeyCounter = 0;
 
     for (let i = 0; i < range; ++i) {
       if (PianoKeys.isBlackKey(i + startNote)) {
-        const x = Math.floor(i * whiteKeyWidth - blackKeyWidth * 0.5);
+        const nextWhiteX = whiteKeyCounter * whiteKeyWidth;
+        const x = nextWhiteX - blackKeyWidth * 0.5;
         this._ctx.fillRect(x, 0, blackKeyWidth, blackKeyHeight);
+      } else {
+        whiteKeyCounter++;
       }
     }
   }
@@ -153,26 +209,25 @@ class PianoKeys extends HTMLElement {
   private static isBlackKey(noteNumber: number) {
     return [1, 3, 6, 8, 10].includes(noteNumber % 12);
   }
+
+  private getStringAttribute(key: string): string {
+    return this.hasAttribute(key) ? this.getAttribute(key) : null;
+  }
+
+  private getNumberAttribute(key: string): number {
+    return this.hasAttribute(key) ? Number(this.getAttribute(key)) : null;
+  }
 }
 
 customElements.define('piano-keys', PianoKeys);
 
 const CSS_STYLE = `
 :host {
-  width: 80%;
-  height: 130px;
-  margin: auto;
+  display: block;
 }
 
 .piano-keyboard-canvas {
   width: 100%;
   height: 100%;
-  min-width: 100px;
-  min-height: 100px;
-  background-color: grey;
 }
 `;
-
-function nullOrEmpty(value: string): boolean {
-  return value == null || value === '';
-}
