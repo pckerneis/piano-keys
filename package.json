@@ -1,5 +1,5 @@
 {
-  "name": "PianoKeyboard",
+  "name": "piano-keys",
   "version": "0.0.1",
   "description": "A piano keyboard web component",
   "author": "Pierre-Clément KERNEIS",
@@ -7,10 +7,13 @@
   "scripts": {
     "webpack": "webpack --config webpack.config.js --display-error-details",
     "dev": "webpack-dev-server --open",
-    "dev-hot": "webpack-dev-server --open --hot"
+    "dev-hot": "webpack-dev-server --open --hot",
+    "doc": "typedoc"
   },
   "private": true,
   "devDependencies": {
+    "@microsoft/tsdoc": "^0.12.18",
+    "typedoc": "^0.17.3",
     "ts-loader": "^6.2.2",
     "tslint": "^6.1.1",
     "typescript": "^3.8.3",

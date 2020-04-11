@@ -6,7 +6,7 @@
   <title>PianoKeys demo page</title>
   <link rel="stylesheet" type="text/css" href="style/index.css">
 </head>
-<script src="dist/bundle.js"></script>
+<script src="dist/piano-keys.js"></script>
 <body>
   <div class="full-page">
     <div class="section">
@@ -15,7 +15,7 @@
         <p>Lightweight piano keyboard build with Custom Elements and Canvas APIs.</p>
       </div>
 
-      <piano-keys start="60" end="84" layout="classic" whiteKey="whitesmoke"></piano-keys>
+      <piano-keys></piano-keys>
 
       <div class="events-row">
         <span id="note-display">Pressed: none</span>
@@ -24,7 +24,7 @@
       
       <h3>Layout</h3>
       <div class="layout-row">
-        <label title="The keys layout, either 'classic' or 'linear' (default)">
+        <label title="The keys layout, either 'classic' (default) or 'linear'">
           layout
           <select id="select-layout">
             <option value="classic">classic</option>
@@ -63,6 +63,7 @@
 
       <h3>HTML</h3>
       <pre><code id="code"></code></pre>
+    </div>
   </div>
   <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -91,9 +92,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const pianoKeys = document.querySelector('piano-keys');
   pianoKeys.addEventListener('keychange', () => {
-    console.log('keychange')
-    const notes = pianoKeys.keyOns.length == 0 ? 
-        'none' : pianoKeys.keyOns.map(key => midiNoteName(key)).join(', ');
+    const notes = pianoKeys.keys.length === 0 ?
+        'none' : pianoKeys.keys.map(key => midiNoteName(key)).join(', ');
     noteDisplay.innerText = `Pressed: ${notes}`;
   });
 

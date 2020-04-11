@@ -1,13 +1,19 @@
 declare class ResizeObserver {
   constructor(...args : any[]);
-  observe(...elements: HTMLElement[]): any;
+  public observe(...elements: HTMLElement[]): any;
 }
 
+/**
+ * The layout for the keys. See {@link PianoKeys.layout}.
+ */
 export enum PianoKeysLayout {
   classic   = 'classic',
   linear    = 'linear',
 }
 
+/**
+ * The layout for the keys. See {@link PianoKeys.mode}.
+ */
 export enum PianoKeysMode {
   toggle    = 'toggle',
   slide     = 'slide',
@@ -15,6 +21,9 @@ export enum PianoKeysMode {
   none      = 'none',
 }
 
+/**
+ * Describes the position and the size of a key relative to the canvas origin.
+ */
 export interface KeyBounds {
   x: number;
   y: number;
@@ -22,16 +31,23 @@ export interface KeyBounds {
   height: number;
 }
 
+/**
+ * A canvas-based piano keyboard.
+ *
+ * ```
+ * <piano-keys min="60" max="84" mode="slide"></piano-keys>
+ * ```
+ */
 export class PianoKeys extends HTMLElement {
 
-  private static MIN_KEY_WIDTH = 5;
+  private static MIN_KEY_WIDTH: number = 5;
 
   private _shadowRoot: ShadowRoot;
-  private _canvas: HTMLCanvasElement;
+  private readonly _canvas: HTMLCanvasElement;
   private _ctx: CanvasRenderingContext2D;
   private _whiteKeyBounds: Map<number, KeyBounds> = new Map<number, KeyBounds>();
   private _blackKeyBounds: Map<number, KeyBounds> = new Map<number, KeyBounds>();
-  private _keyOns: number[] = [];
+  private _keys: number[] = [];
   private _hoveredKey: number = null;
 
   constructor() {
@@ -54,16 +70,22 @@ export class PianoKeys extends HTMLElement {
     resizeObserver.observe(this);
 
     this._canvas.addEventListener('mousedown', (event) => this.handleMouseDown(event));
-    document.addEventListener('mouseup', (event) => this.handleMouseUp(event));
+    document.addEventListener('mouseup', () => this.handleMouseUp());
     this._canvas.addEventListener('mousemove', (event) => this.handleMouseMove(event));
-    this._canvas.addEventListener('mouseleave', (event) => this.handleMouseLeave(event));
+    this._canvas.addEventListener('mouseleave', () => this.handleMouseLeave());
   }
 
-  static get tag() {
+  /**
+   * HTML tag name used for this element.
+   */
+  public static get tag(): string {
     return "piano-keys";
   }
 
-  static get observedAttributes() { 
+  /**
+   * Observed HTML attributes (custom element implementation).
+   */
+  public static get observedAttributes(): string[] {
     return [
       'start',
       'end',
@@ -80,16 +102,30 @@ export class PianoKeys extends HTMLElement {
     ]; 
   }
 
-  public static isBlackKey(keyNumber: number) {
+  /**
+   * Does the provided key value correspond to a black key ?
+   * @remark This method will always return false for negative values.
+   * @param keyNumber the value to test. A key number of 0 corresponds to a `C-2` note.
+   */
+  public static isBlackKey(keyNumber: number): boolean {
     return [1, 3, 6, 8, 10].includes(keyNumber % 12);
   }
 
-  public get keyOns(): number[] {
-    return this._keyOns;
+  /**
+   * An array of keys that are currently pressed.
+   *
+   * @remark this returns the actual array used internally to render the keys. You shouldn't mutate it yourself unless you
+   * know what you're doing in order to avoid weird mouse logic behaviours. Altering the array won't trigger a redraw.
+   */
+  public get keys(): number[] {
+    return this._keys;
   }
 
   // Attributes/properties reflection
 
+  /**
+   * First key value to show.
+   */
   public get start(): number {
     return this.getNumberAttribute('start');
   }
@@ -98,6 +134,12 @@ export class PianoKeys extends HTMLElement {
     this.setAttribute('start', '' + newValue);
   }
 
+  /**
+   * Last key value to show.
+   *
+   * @remark When `fixed` is set to a strictly positive number, the `end` value is ignored. See {@link fixed}.
+   * @remark The computed range that is actually shown is restricted to be at least `2`.
+   */
   public get end(): number {
     return this.getNumberAttribute('end');
   }
@@ -106,6 +148,14 @@ export class PianoKeys extends HTMLElement {
     this.setAttribute('end', '' + newValue);
   }
 
+  /**
+   * A fixed pixel size for a key.
+   *
+   * If `layout` is set to `linear` then it is the width of any key. If `layout` is set to `classic` then it is the width
+   * of a white key.
+   * @remark when `fixed` is set to a strictly positive value, the `end` parameter is ignored and the keyboard won't adapt
+   * the size of the keys when it is externally resized. It will instead draw as many keys as possible in the available space
+   */
   public get fixed(): number {
     return this.getNumberAttribute('fixed');
   }
@@ -114,6 +164,12 @@ export class PianoKeys extends HTMLElement {
     this.setAttribute('fixed', '' + newValue);
   }
 
+  /**
+   * The keys layout, either `classic` or `linear`. Defaults to `classic`.
+   *
+   * In `linear` mode, each key has the same width. In `classic` mode, the white keys are placed at regular interval and
+   * the black keys are shorter, just like in a real-life classical piano.
+   */
   public get layout(): PianoKeysLayout | string {
     return this.getStringAttribute('layout');
   }
@@ -122,49 +178,95 @@ export class PianoKeys extends HTMLElement {
     this.setAttribute('layout', newValue);
   }
 
+  /**
+   * The mouse interaction mode either `default`, `slide`, `toggle` or `none`.
+   *
+   * In `default` mode, a mouse press activates a key until the the mouse button is released. Mouse drags are ignored.
+   * In `slide` mode, mouse drags also activate keys. Only one key stays activate at the same time.
+   * In `toggle` mode, a mouse press toggles the state of a key.
+   * In `none` mode, keys events are ignored. The hovered key doesn't get styled and pressing keys won't do anything.
+   * @remark Previously pressed keys are lost when changing the mode.
+   */
   public get mode(): PianoKeysMode | string {
     return this.getStringAttribute('mode');
-  }
-
-  public get hoveredKey(): number {
-    return this._hoveredKey;
   }
 
   public set mode(newValue: string) {
     if (this.mode !== newValue) {
       this.setAttribute('mode', newValue);
-      this._keyOns = [];
+      this._keys = [];
       this._hoveredKey = null;
       this.draw();
     }
   }
 
+  /**
+   * The key value that is currently under the mouse, or null if there isn't.
+   */
+  public get hoveredKey(): number {
+    return this._hoveredKey;
+  }
+
   // Colors attributes/properties reflection
 
+  /**
+   * Fill style used for strokes.
+   *
+   * It can be either a color, a gradient or a pattern as defined in the Canvas API.
+   */
   public get stroke(): string {
     return this.getStringAttribute('stroke');
   }
 
+  /**
+   * Fill style used for white keys in normal state.
+   *
+   * It can be either a color, a gradient or a pattern as defined in the Canvas API.
+   */
   public get whiteKey(): string {
     return this.getStringAttribute('whiteKey');
   }
 
+  /**
+   * Fill style used for white keys when hovered.
+   *
+   * It can be either a color, a gradient or a pattern as defined in the Canvas API.
+   */
   public get whiteKeyHover(): string {
     return this.getStringAttribute('whiteKeyHover');
   }
 
+  /**
+   * Fill style used for white keys when pressed.
+   *
+   * It can be either a color, a gradient or a pattern as defined in the Canvas API.
+   */
   public get whiteKeyOn(): string {
     return this.getStringAttribute('whiteKeyOn');
   }
-
+  /**
+   * Fill style used for black keys in normal state.
+   *
+   * It can be either a color, a gradient or a pattern as defined in the Canvas API.
+   */
   public get blackKey(): string {
     return this.getStringAttribute('blackKey');
   }
 
+  /**
+   * Fill style used for black keys when hovered.
+   *
+   * It can be either a color, a gradient or a pattern as defined in the Canvas API.
+   */
   public get blackKeyHover(): string {
     return this.getStringAttribute('blackKeyHover');
   }
 
+  /**
+   * Fill style used for black keys when hovered.
+   *
+   * It can be either a color, a gradient or a pattern as defined in the Canvas API.
+   */
   public get blackKeyOn(): string {
     return this.getStringAttribute('blackKeyOn');
   }
@@ -204,8 +306,13 @@ export class PianoKeys extends HTMLElement {
     this.draw();
   }
 
-  public connectedCallback() {
+  /**
+   * Called when the HTML node is first connected to the DOM (custom element implementation).
+   */
+  public connectedCallback(): void {
     // Default colors
+    this.start = this.start                 || 60;
+    this.end = this.end                     || 84;
     this.whiteKey = this.whiteKey           || '#fff';
     this.whiteKeyHover = this.whiteKeyHover || '#eee';
     this.whiteKeyOn = this.whiteKeyOn       || '#ccc';
@@ -216,12 +323,57 @@ export class PianoKeys extends HTMLElement {
 
     this.resize();
   }
-  
-  public attributeChangedCallback(/* name, oldValue, newValue */) {
+
+  /**
+   * Called whenever an observed HTML attribute changes (custom element implementation). Redraws the component.
+   */
+  public attributeChangedCallback(/* name, oldValue, newValue */): void {
     this.draw();
   }
 
-  private handleMouseDown(event: MouseEvent) {
+  /**
+   * Draws the keys.
+   */
+  public draw(): void {
+    this._whiteKeyBounds.clear();
+    this._blackKeyBounds.clear();
+
+    if (this.layout === PianoKeysLayout.linear) {
+      this.drawLinear(this._canvas.width, this._canvas.height);
+    } else {
+      this.drawClassic(this._canvas.width, this._canvas.height);
+    }
+  }
+
+  /**
+   * Draws a single key. This method can be redefined
+   */
+  protected drawKey(keyNumber: number, keyBounds: KeyBounds): void {
+    this._ctx.fillStyle = this.getFillStyle(keyNumber);
+    this._ctx.fillRect(keyBounds.x, keyBounds.y, keyBounds.width, keyBounds.height);
+
+    if (this.layout == 'classic' && PianoKeys.isBlackKey(keyNumber)) {
+      this._ctx.fillStyle = this.stroke;
+      this._ctx.fillRect(Math.round(keyBounds.x), keyBounds.y, 1, keyBounds.height);
+      this._ctx.fillRect(Math.round(keyBounds.x), keyBounds.y + keyBounds.height - 1, keyBounds.width, 1);
+      this._ctx.fillRect(Math.round(keyBounds.x + keyBounds.width - 1), keyBounds.y, 1, keyBounds.height);
+    }
+  }
+
+  /**
+   * Returns the fill style to use based on the state of the provided key.
+   */
+  protected getFillStyle(keyNumber: number): string {
+    return PianoKeys.isBlackKey(keyNumber) ?
+        this._keys.includes(keyNumber) ?
+            this.blackKeyOn : (this._hoveredKey === keyNumber ?
+                this.blackKeyHover : this.blackKey) :
+        this._keys.includes(keyNumber) ?
+            this.whiteKeyOn : (this._hoveredKey === keyNumber ?
+                this.whiteKeyHover : this.whiteKey)
+  }
+
+  private handleMouseDown(event: MouseEvent): void {
     const mode = this.mode;
 
     if (mode === 'none') {
@@ -235,15 +387,15 @@ export class PianoKeys extends HTMLElement {
 
     if (keyPressed != null) {
       if (mode === 'toggle') {
-        if (this._keyOns.includes(keyPressed)) {
-          this._keyOns = this._keyOns.filter((v) => v !== keyPressed);
+        if (this._keys.includes(keyPressed)) {
+          this._keys = this._keys.filter((v) => v !== keyPressed);
         } else {
-          this._keyOns = [...this._keyOns, keyPressed];
+          this._keys = [...this._keys, keyPressed];
         }
 
         this.notifyKeyChange();
       } else {
-        this._keyOns = [keyPressed];
+        this._keys = [keyPressed];
         this.notifyKeyChange();
       }
     }
@@ -251,7 +403,7 @@ export class PianoKeys extends HTMLElement {
     this.draw();
   }
 
-  private handleMouseUp(event: MouseEvent) {
+  private handleMouseUp(/* event: MouseEvent */): void {
     const mode = this.mode;
 
     if (mode === 'none') {
@@ -259,14 +411,14 @@ export class PianoKeys extends HTMLElement {
     }
 
     if (mode !== 'toggle') {
-      this._keyOns = [];
+      this._keys = [];
       this.notifyKeyChange();
     }
 
     this.draw();
   }
 
-  private handleMouseMove(event: MouseEvent) {
+  private handleMouseMove(event: MouseEvent): void {
     const mode = this.mode;
 
     if (mode === 'none') {
@@ -291,14 +443,14 @@ export class PianoKeys extends HTMLElement {
     let changed = false;
 
     if (event.buttons == 0 && mode != 'toggle') {
-      if (this._keyOns.length > 0) {
-        this._keyOns = [];
+      if (this._keys.length > 0) {
+        this._keys = [];
         changed = true;
       }
     } else {
       if (mode === 'slide') {
-        if (this._keyOns.length !== 1 || this._keyOns[0] !== this._hoveredKey) {
-          this._keyOns = [this._hoveredKey];
+        if (this._keys.length !== 1 || this._keys[0] !== this._hoveredKey) {
+          this._keys = [this._hoveredKey];
           changed = true;          
         }
       }
@@ -311,7 +463,7 @@ export class PianoKeys extends HTMLElement {
     this.draw();
   }
 
-  private handleMouseLeave(event: MouseEvent) {
+  private handleMouseLeave(/* event: MouseEvent */): void {
     this._hoveredKey = null;
     this.dispatchEvent(new CustomEvent('keyhover'));
     
@@ -323,7 +475,7 @@ export class PianoKeys extends HTMLElement {
 
     [
       ...Array.from(this._blackKeyBounds.entries()),
-      ...Array.from(this._whiteKeyBounds.entries())
+      ...Array.from(this._whiteKeyBounds.entries()),
     ].some(entry => {
       const bounds: KeyBounds = entry[1];
       if (x >= bounds.x && x < bounds.x + bounds.width
@@ -347,20 +499,7 @@ export class PianoKeys extends HTMLElement {
     this.draw();
   }
 
-  public draw() {
-    this._whiteKeyBounds.clear();
-    this._blackKeyBounds.clear();
-
-    switch(this.layout) {
-      case PianoKeysLayout.classic:
-        this.drawClassic(this._canvas.width, this._canvas.height);
-        break;
-      default:
-        this.drawLinear(this._canvas.width, this._canvas.height);
-    }
-  }
-
-  private drawLinear(width: number, height: number) {
+  private drawLinear(width: number, height: number): void {
     const startKey = this.start;
     const endKey = Math.max(this.end, startKey + 2);
 
@@ -384,7 +523,7 @@ export class PianoKeys extends HTMLElement {
         x,
         y: 0,
         width: keyWidth, 
-        height
+        height,
       });
       
       if (currentStep > 0) {
@@ -396,7 +535,7 @@ export class PianoKeys extends HTMLElement {
         x,
         y: 0, 
         width: keyWidth,
-        height
+        height,
       };
 
       if (PianoKeys.isBlackKey(currentKey)) {
@@ -409,7 +548,7 @@ export class PianoKeys extends HTMLElement {
     }
   }
 
-  private drawClassic(width: number, height: number) {
+  private drawClassic(width: number, height: number): void {
     let startKey = this.start;
 
     if (PianoKeys.isBlackKey(startKey)) {
@@ -450,7 +589,7 @@ export class PianoKeys extends HTMLElement {
           x,
           y: 0, 
           width: blackKeyWidth,
-          height: blackKeyHeight
+          height: blackKeyHeight,
         });
       } else {
         const x = Math.round(whiteKeyCounter * whiteKeyWidth);
@@ -459,7 +598,7 @@ export class PianoKeys extends HTMLElement {
           x,
           y: 0, 
           width: whiteKeyWidth,
-          height
+          height,
         });
 
         whiteKeyCounter++;
@@ -482,7 +621,7 @@ export class PianoKeys extends HTMLElement {
       // Draw black keys
       for (const e of Array.from(this._blackKeyBounds.entries())) {
         this.drawKey(e[0], e[1]);
-      };
+      }
     }
   }
 
@@ -493,31 +632,7 @@ export class PianoKeys extends HTMLElement {
   private getNumberAttribute(key: string): number {
     return this.hasAttribute(key) ? Number(this.getAttribute(key)) : null;
   }
-
-  protected drawKey(keyNumber: number, keyBounds: KeyBounds) {
-    this._ctx.fillStyle = this.getFillStyle(keyNumber);
-    this._ctx.fillRect(keyBounds.x, keyBounds.y, keyBounds.width, keyBounds.height);
-
-    if (this.layout == 'classic' && PianoKeys.isBlackKey(keyNumber)) {
-      this._ctx.fillStyle = this.stroke;
-      this._ctx.fillRect(Math.round(keyBounds.x), keyBounds.y, 1, keyBounds.height);
-      this._ctx.fillRect(Math.round(keyBounds.x), keyBounds.y + keyBounds.height - 1, keyBounds.width, 1);
-      this._ctx.fillRect(Math.round(keyBounds.x + keyBounds.width - 1), keyBounds.y, 1, keyBounds.height);
-    }
-  }
-
-  protected getFillStyle(keyNumber: number): string {
-    return PianoKeys.isBlackKey(keyNumber) ?
-        this._keyOns.includes(keyNumber) ? 
-            this.blackKeyOn : (this._hoveredKey === keyNumber ?
-                this.blackKeyHover : this.blackKey) :
-        this._keyOns.includes(keyNumber) ? 
-            this.whiteKeyOn : (this._hoveredKey === keyNumber ?
-                this.whiteKeyHover : this.whiteKey)
-  }
 }
-
-customElements.define('piano-keys', PianoKeys);
 
 const CSS_STYLE = `
 :host {
@@ -529,3 +644,5 @@ const CSS_STYLE = `
   height: 100%;
 }
 `;
+
+customElements.define('piano-keys', PianoKeys);
