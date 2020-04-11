@@ -1,32 +1,33 @@
-# PianoKeys
+# piano-keys
 
 > A canvas based piano keyboard.
 
-PianoKeys is a lightweight piano keyboard that can be customized and interacted with the mouse.
-Check out the [live demo]().
+**piano-keys** is a lightweight piano keyboard that can be customized and interacted with the mouse.
 
 ## Basic usage
 
 Simply insert `piano-keys.js` into your webpage and add a `piano-keys` element to it.
 ```
-<piano-keys start="60" end="84" mode="slide"></piano-keys>
+<piano-keys></piano-keys>
 ```
 
-![alt text](./img/classic.png "PianoKeys screenshot")
+![alt text](./img/classic.png "piano-keys screenshot")
+*Hello from piano-keys!*
 
 ## Layouts
 
-PianoKeys comes with two layouts : `classic` and `linear`. While the `classic` layout tries to mimic the classic piano keys layout, the `linear` layout gives the same size to black and white keys.
+**piano-keys** comes with two layouts : `classic` and `linear`. While the `classic` layout tries to mimic the classical piano keys layout, the `linear` layout gives the same size to black and white keys.
 
-![alt text](./img/linear.png "PianoKeys with linear layout")
+![alt text](./img/linear.png "piano-keys with linear layout")
+*piano-keys in linear layout*
 
 ## Range and keys size
 
-A first approach for setting the range of the keyboard is to specify both `start` and `end` attributes which define the first and the last key to be shown. 
+A first approach for setting the range of the keyboard is to specify both `start` and `end` attributes which define the first and the last key to be shown. Using this approach, the keys will be resized so that they fit the available space within the component.
 ```
 <piano-keys start="60" end="84"></piano-keys>
 ```
-Using this approach, the keys will be resized so that they fit the available space within the component.
+
 ![alt text](./img/resize-end.gif "Resize behavior with start/end attributes")
 
 You can only specify a fixed width in pixels for the keys with `fixed`. If `fixed` has a strictly positive value, then the `end` attribute will be ignored and the component will show as many keys as possible within the available space. 
@@ -45,7 +46,7 @@ You can choose between these mouse interaction modes :
 
 ## Customize appearence
 
-Out of the box, PianoKeys allow you to specify colors for the keys, accordingly to their state (normal, hovered or pressed). The available attributes are :
+Out of the box, **piano-keys** allow you to specify colors for the keys, accordingly to their state (normal, hovered or pressed). The available attributes are :
 - `stroke`
 - `whiteKey`
 - `whiteKeyHover`
@@ -56,13 +57,13 @@ Out of the box, PianoKeys allow you to specify colors for the keys, accordingly 
 
 These attributes can be either a color, a gradient or a pattern, as defined in the [Canvas API](https://developer.mozilla.org/fr/docs/Web/API/CanvasRenderingContext2D/fillStyle).
 
-![alt text](./img/colors.png "PianoKeys with custom colors")
 ```
 <piano-keys start="60" end="84" mode="toggle"
   whitekey="#dee8ef" whitekeyhover="#aaccd9" whitekeyon="#ff8080"
   blackkey="#97b6d5" blackkeyhover="#517a99" blackkeyon="#ff8080">
 </piano-keys>
 ```
+![alt text](./img/colors.png "piano-keys with custom colors")
 
 For more control over the look, you can also inherit from `PianoKeys` to have your custom drawing code.
 
