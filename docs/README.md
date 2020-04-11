@@ -12,14 +12,16 @@ Simply insert `piano-keys.js` into your webpage and add a `piano-keys` element t
 ```
 
 ![alt text](./img/classic.png "piano-keys screenshot")
+
 *Hello from piano-keys!*
 
 ## Layouts
 
-**piano-keys** comes with two layouts : `classic` and `linear`. While the `classic` layout tries to mimic the classical piano keys layout, the `linear` layout gives the same size to black and white keys.
+**piano-keys** comes with two layouts : `classic` and `linear`. While the `classic` layout tries to mimic the classical piano keys layout, the `linear` layout gives the same size to black and white keys. This can make mouse interaction easier.
 
 ![alt text](./img/linear.png "piano-keys with linear layout")
-*piano-keys in linear layout*
+
+*piano-keys with linear layout*
 
 ## Range and keys size
 
