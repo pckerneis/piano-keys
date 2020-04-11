@@ -3,6 +3,7 @@
 > A canvas based piano keyboard.
 
 **piano-keys** is a lightweight piano keyboard that can be customized and interacted with the mouse.
+Check out the [live demo](https://pckerneis.com/piano-keys-demo/).
 
 ## Basic usage
 
