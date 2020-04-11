@@ -39,6 +39,8 @@ You can only specify a fixed width in pixels for the keys with `fixed`. If `fixe
 ```
 ![alt text](https://github.com/pckerneis/piano-keys/raw/master/docs/img/resize-fixed.gif "Resize behavior with fixed key size")
 
+The key numbers match the standard MIDI note numbers, where `0` is `C-2`. Although MIDI notes range from `0` to `127`, there are no upper limit for the `end` value and the visible range won't be clipped when `fixed` is set.
+
 ## Mouse interaction modes
 
 You can choose between these mouse interaction modes :
