@@ -1,19 +1,10 @@
 @import url('https://fonts.googleapis.com/css?family=Roboto&display=swap');
 
-/*====================================*/
-/*              General
-/*====================================*/
-
 body {
   background: rgb(246, 246, 247);
   font-family: 'Roboto';
   box-sizing: border-box;
-  font-size: 13px;
-}
-
-.header {
-  text-align: center;
-  margin-bottom: 32px;
+  font-size: 14px;
 }
 
 body * {
@@ -33,21 +24,24 @@ button:hover:not([disabled]) {
   border: 1px solid rgba(0, 0, 0, 0.9);
 }
 
+select {
+  margin: 0 5px;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
 .layout-row {
   display: flex;
   flex-wrap: nowrap;
   justify-content: space-between;
 }
 
-.layout-row input {
+.layout-row input,
+.layout-row select {
   margin: 4px;
-}
-
-.flex-column {
-  display: flex;
-  flex-direction: column;
-  flex-wrap: nowrap;
-  flex: 1;
 }
 
 .full-page {
@@ -63,7 +57,9 @@ button:hover:not([disabled]) {
 
 .section {
   margin: auto;
+  margin-top: 20px;
   width: 80%;
+  max-width: 800px;
 }
 
 piano-keys {
@@ -110,102 +106,20 @@ input[type="color"] {
   flex-grow: 1;
   margin: auto;
 }
+
+pre {
+  background: #efefef;
+  box-shadow: inset 2px 2px 5px 0 rgba(0, 0, 0, 0.1);
+  padding: 8px;
+}
+
+#code {
+  user-select: text;
+  white-space: pre-wrap;
+}
 /*====================================*/
 /*              Other
 /*====================================*/
-
-/* sliders */
-/* http://danielstern.ca/range.css/#/ */
-
-input[type=range] {
-  -webkit-appearance: none;
-  margin: 4.6px 0;
-  background: none;
-}
-input[type=range]:focus {
-  outline: none;
-}
-input[type=range]::-webkit-slider-runnable-track {
-  width: 100%;
-  height: 8.8px;
-  cursor: pointer;
-  box-shadow: 1px 1px 4px #0000002c inset;
-  background: #00000005;
-  border-radius: 10px;
-  border: 0;
-}
-input[type=range]::-webkit-slider-thumb {
-  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.25);
-  background: #00000005;
-  height: 16px;
-  width: 16px;
-  border-radius: 50%;
-  background: #ffffff;
-  cursor: pointer;
-  -webkit-appearance: none;
-  margin-top: -4.8px;
-}
-input[type=range]:focus::-webkit-slider-runnable-track {
-  background: #00000015;
-}
-input[type=range]:focus::-webkit-slider-thumb {
-  border: 1px solid #00000080;
-}
-input[type=range]::-moz-range-track {
-  width: 100%;
-  height: 8.8px;
-  cursor: pointer;
-  box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.31), 0px 0px 1px rgba(13, 13, 13, 0.31);
-  background: rgba(0, 0, 0, 0.07);
-  border-radius: 6.9px;
-  border: 0.2px solid #000101;
-}
-input[type=range]::-moz-range-thumb {
-  box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.55), 0px 0px 1px rgba(13, 13, 13, 0.55);
-  border: 0.5px solid rgba(0, 0, 0, 0.21);
-  height: 18px;
-  width: 16px;
-  border-radius: 10px;
-  background: #ffffff;
-  cursor: pointer;
-}
-input[type=range]::-ms-track {
-  width: 100%;
-  height: 8.8px;
-  cursor: pointer;
-  background: transparent;
-  border-color: transparent;
-  color: transparent;
-}
-input[type=range]::-ms-fill-lower {
-  background: rgba(0, 0, 0, 0.07);
-  border: 0.2px solid #000101;
-  border-radius: 13.8px;
-  box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.31), 0px 0px 1px rgba(13, 13, 13, 0.31);
-}
-input[type=range]::-ms-fill-upper {
-  background: rgba(0, 0, 0, 0.07);
-  border: 0.2px solid #000101;
-  border-radius: 13.8px;
-  box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.31), 0px 0px 1px rgba(13, 13, 13, 0.31);
-}
-input[type=range]::-ms-thumb {
-  box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.55), 0px 0px 1px rgba(13, 13, 13, 0.55);
-  border: 0.5px solid rgba(0, 0, 0, 0.21);
-  height: 18px;
-  width: 16px;
-  border-radius: 10px;
-  background: #ffffff;
-  cursor: pointer;
-  height: 8.8px;
-}
-input[type=range]:focus::-ms-fill-lower {
-  background: rgba(0, 0, 0, 0.07);
-}
-input[type=range]:focus::-ms-fill-upper {
-  background: rgba(13, 13, 13, 0.07);
-}
-
 /* scrollbar */
 /* http://webkit-scroll-gen.sourceforge.net/ */
 

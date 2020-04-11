@@ -23,13 +23,6 @@ interface KeyBounds {
 }
 
 class PianoKeys extends HTMLElement {
-  public strokeStyle: string = '#000';
-  public whiteKeyFillStyle: string = '#fff';
-  public whiteKeyHoverFillStyle: string = '#eee';
-  public whiteKeyOnFillStyle: string = '#ccc';
-  public blackKeyFillStyle: string = '#888';
-  public blackKeyHoverFillStyle: string = '#333';
-  public blackKeyOnFillStyle: string = '#111';
 
   private static MIN_KEY_WIDTH = 5;
 
@@ -72,7 +65,14 @@ class PianoKeys extends HTMLElement {
       'end',
       'layout',
       'fixed',
-      'mode'
+      'mode',
+      'stroke',
+      'whiteKey',
+      'whiteKeyHover',
+      'whiteKeyOn',
+      'blackKey',
+      'blackKeyHover',
+      'blackKeyOn',
     ]; 
   }
 
@@ -84,6 +84,7 @@ class PianoKeys extends HTMLElement {
     return this._keyOns;
   }
 
+  // Attributes/properties reflection
 
   public get start(): number {
     return this.getNumberAttribute('start');
@@ -134,7 +135,81 @@ class PianoKeys extends HTMLElement {
     }
   }
 
+  // Colors attributes/properties reflection
+
+  public get stroke(): string {
+    return this.getStringAttribute('stroke');
+  }
+
+  public get whiteKey(): string {
+    return this.getStringAttribute('whiteKey');
+  }
+
+  public get whiteKeyHover(): string {
+    return this.getStringAttribute('whiteKeyHover');
+  }
+
+  public get whiteKeyOn(): string {
+    return this.getStringAttribute('whiteKeyOn');
+  }
+
+  public get blackKey(): string {
+    return this.getStringAttribute('blackKey');
+  }
+
+  public get blackKeyHover(): string {
+    return this.getStringAttribute('blackKeyHover');
+  }
+
+  public get blackKeyOn(): string {
+    return this.getStringAttribute('blackKeyOn');
+  }
+
+  public set stroke(newValue: string) {
+    this.setAttribute('stroke', newValue);
+    this.draw();
+  }
+
+  public set whiteKey(newValue: string) {
+    this.setAttribute('whiteKey', newValue);
+    this.draw();
+  }
+
+  public set whiteKeyHover(newValue: string) {
+    this.setAttribute('whiteKeyHover', newValue);
+    this.draw();
+  }
+
+  public set whiteKeyOn(newValue: string) {
+    this.setAttribute('whiteKeyOn', newValue);
+    this.draw();
+  }
+
+  public set blackKey(newValue: string) {
+    this.setAttribute('blackKey', newValue);
+    this.draw();
+  }
+
+  public set blackKeyHover(newValue: string) {
+    this.setAttribute('blackKeyHover', newValue);
+    this.draw();
+  }
+
+  public set blackKeyOn(newValue: string) {
+    this.setAttribute('blackKeyOn', newValue);
+    this.draw();
+  }
+
   public connectedCallback() {
+    // Default colors
+    this.whiteKey = this.whiteKey           || '#fff';
+    this.whiteKeyHover = this.whiteKeyHover || '#eee';
+    this.whiteKeyOn = this.whiteKeyOn       || '#ccc';
+    this.blackKey = this.blackKey           || '#888';
+    this.blackKeyHover = this.blackKeyHover || '#333';
+    this.blackKeyOn = this.blackKeyOn       || '#111';
+    this.stroke = this.stroke               || '#000';
+
     this.resize();
   }
   
@@ -306,7 +381,7 @@ class PianoKeys extends HTMLElement {
       });
       
       if (currentStep > 0) {
-        this._ctx.fillStyle = this.strokeStyle;
+        this._ctx.fillStyle = this.stroke;
         this._ctx.fillRect(x, 0, 1, height);
       }
 
@@ -392,7 +467,7 @@ class PianoKeys extends HTMLElement {
         if (first) {
           first = false;
         } else {
-          this._ctx.fillStyle = this.strokeStyle;
+          this._ctx.fillStyle = this.stroke;
           this._ctx.fillRect(e[1].x, 0, 1, height);
         }
       }
@@ -417,7 +492,7 @@ class PianoKeys extends HTMLElement {
     this._ctx.fillRect(keyBounds.x, keyBounds.y, keyBounds.width, keyBounds.height);
 
     if (this.layout == 'classic' && PianoKeys.isBlackKey(keyNumber)) {
-      this._ctx.fillStyle = this.strokeStyle;
+      this._ctx.fillStyle = this.stroke;
       this._ctx.fillRect(Math.round(keyBounds.x), keyBounds.y, 1, keyBounds.height);
       this._ctx.fillRect(Math.round(keyBounds.x), keyBounds.y + keyBounds.height - 1, keyBounds.width, 1);
       this._ctx.fillRect(Math.round(keyBounds.x + keyBounds.width - 1), keyBounds.y, 1, keyBounds.height);
@@ -427,11 +502,11 @@ class PianoKeys extends HTMLElement {
   protected getFillStyle(keyNumber: number): string {
     return PianoKeys.isBlackKey(keyNumber) ?
         this._keyOns.includes(keyNumber) ? 
-            this.blackKeyOnFillStyle : (this._hoveredKey === keyNumber ?
-                this.blackKeyHoverFillStyle : this.blackKeyFillStyle) :
+            this.blackKeyOn : (this._hoveredKey === keyNumber ?
+                this.blackKeyHover : this.blackKey) :
         this._keyOns.includes(keyNumber) ? 
-            this.whiteKeyOnFillStyle : (this._hoveredKey === keyNumber ?
-                this.whiteKeyHoverFillStyle : this.whiteKeyFillStyle)
+            this.whiteKeyOn : (this._hoveredKey === keyNumber ?
+                this.whiteKeyHover : this.whiteKey)
   }
 }
 

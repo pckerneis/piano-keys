@@ -15,7 +15,7 @@
         <p>Lightweight piano keyboard build with Custom Elements and Canvas APIs.</p>
       </div>
 
-      <piano-keys start="60" end="84" layout="classic"></piano-keys>
+      <piano-keys start="60" end="84" layout="classic" whiteKey="whitesmoke"></piano-keys>
 
       <div class="events-row">
         <span id="note-display">Pressed: none</span>
@@ -60,6 +60,9 @@
 
       <h3>Colors</h3>
       <div id="colors-container"></div>
+
+      <h3>HTML</h3>
+      <pre><code id="code"></code></pre>
   </div>
   <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -72,6 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const noteDisplay = document.querySelector('#note-display');
   const hoverDisplay = document.querySelector('#hover-display');
   const colorsContainer = document.querySelector('#colors-container');
+  const codeContainer = document.querySelector('#code');
 
   rangeStart.addEventListener('change', () => refreshPiano());
   rangeEnd.addEventListener('change', () => refreshPiano());
@@ -104,6 +108,8 @@ document.addEventListener('DOMContentLoaded', () => {
     pianoKeys.layout = layoutSelect.value;
     pianoKeys.fixed = checkboxFixed.checked ? inputFixed.value : 0;
     pianoKeys.mode = modeSelect.value;
+
+    codeContainer.innerText = pianoKeys.outerHTML;
   }
 
   function midiNoteName(noteNumber) {
@@ -117,13 +123,13 @@ document.addEventListener('DOMContentLoaded', () => {
     return pitchNames[pitch] + octave.toFixed(0);
   }
   
-  prepareColorPicker('whiteKeyFillStyle', '#ffffff');
-  prepareColorPicker('whiteKeyHoverFillStyle', '#eeeeee');
-  prepareColorPicker('whiteKeyOnFillStyle', '#cccccc');
-  prepareColorPicker('blackKeyFillStyle', '#888888');
-  prepareColorPicker('blackKeyHoverFillStyle', '#333333');
-  prepareColorPicker('blackKeyOnFillStyle', '#111111');
-  prepareColorPicker('strokeStyle', '#00000');
+  prepareColorPicker('whiteKey', '#ffffff');
+  prepareColorPicker('whiteKeyHover', '#eeeeee');
+  prepareColorPicker('whiteKeyOn', '#cccccc');
+  prepareColorPicker('blackKey', '#888888');
+  prepareColorPicker('blackKeyHover', '#333333');
+  prepareColorPicker('blackKeyOn', '#111111');
+  prepareColorPicker('stroke', '#00000');
 
   function prepareColorPicker(attributeName, defaultValue) {
     const colorPicker = document.createElement('input');
@@ -133,15 +139,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const label = document.createElement('label');
     const span = document.createElement('span');
     span.innerText = attributeName;
-    label.append(span, colorPicker);
+    label.append(colorPicker, span);
 
     colorPicker.addEventListener('change', () => {
       pianoKeys[attributeName] = colorPicker.value;
-      pianoKeys.draw();
+      refreshPiano();
     });
 
     colorsContainer.append(label);
   }
+
+  refreshPiano();
 });
   </script>
 </body>
