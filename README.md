@@ -1,3 +1,5 @@
+![alt text](https://img.shields.io/github/package-json/v/pckerneis/piano-keys "package version") ![alt text](https://img.shields.io/github/languages/code-size/pckerneis/piano-keys "codebase size")
+
 # piano-keys
 
 > A canvas based piano keyboard.
