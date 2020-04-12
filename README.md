@@ -5,7 +5,9 @@
 ![alt text](https://github.com/pckerneis/piano-keys/raw/master/docs/img/classic.png "piano-keys screenshot")
 
 **piano-keys** is a lightweight piano keyboard that can be customized and interacted with the mouse.
-Check out the [live demo](https://pckerneis.com/piano-keys-demo/).
+
+- See a [live demo](https://pckerneis.com/piano-keys-demo/)
+- See the [usage guide](https://pckerneis.github.io/piano-keys/#/)
 
 ## Installation
 
