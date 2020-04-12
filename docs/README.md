@@ -14,15 +14,30 @@ Simply insert `piano-keys.js` into your webpage and add a `piano-keys` element t
 
 ![alt text](https://github.com/pckerneis/piano-keys/raw/master/docs/img/classic.png "piano-keys screenshot")
 
-*Hello from piano-keys!*
+Further customization can be done using either HTML attributes or the reflected Javascript properties. All the options described on this page come in both flavors :
+
+```
+<piano-keys start="0" end="12" layout="linear" mode="slide"></piano-keys>
+```
+is equivalent to :
+
+```javascript
+const pianoKeys = new PianoKeys();
+pianoKeys.start = 0;
+pianoKeys.end = 12;
+pianoKeys.layout = "linear";
+pianoKeys.mode = "slide";
+domContainer.append(pianoKeys);
+```
 
 ## Layouts
 
 **piano-keys** comes with two layouts : `classic` and `linear`. While the `classic` layout tries to mimic the classical piano keys layout, the `linear` layout gives the same size to black and white keys. This can make mouse interaction easier.
+```
+<piano-keys layout="linear"></piano-keys>
+```
 
-![alt text](https://github.com/pckerneis/piano-keys/raw/master/docs/img/classic.png "piano-keys with linear layout")
-
-*piano-keys with linear layout*
+![alt text](https://github.com/pckerneis/piano-keys/raw/master/docs/img/linear.png "piano-keys with linear layout")
 
 ## Range and keys size
 
@@ -46,8 +61,8 @@ The key numbers match the standard MIDI note numbers, where `0` is `C-2`. Althou
 You can choose between these mouse interaction modes :
 - `default`: press the mouse to press a key, release the mouse to release the key.
 - `slide`: same as default but you can also slide from a note to another with a mouse drag.
-- `toggle`: press the mouse to toggle a key
-- `none`: the mouse is simply ignored
+- `toggle`: press the mouse to toggle a key.
+- `none`: the mouse is simply ignored.
 
 ## Customize appearence
 
@@ -70,7 +85,15 @@ These attributes can be either a color, a gradient or a pattern, as defined in t
 ```
 ![alt text](https://github.com/pckerneis/piano-keys/raw/master/docs/img/colors.png "piano-keys with custom colors")
 
-For more control over the look, you can also inherit from `PianoKeys` to have your custom drawing code.
+For more control over the look, you can also inherit from `PianoKeys` to run your custom drawing code.
+
+## Accessing the pressed keys
+
+Each key is associated to a key number value. The minimal value `0` corresponds to a `C` note like in the MIDI standard. Unlike MIDI, there is no specified upper bound for the key number values.
+
+The `PianoKeys` objects exposes its state via the following properties:
+- `keys`: an array of pressed key values.
+- `hoveredKey`: the value of the key being hovered (or null if there isn't).
 
 ## Listening to key events
 
