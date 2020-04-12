@@ -92,23 +92,34 @@ For more control over the look, you can also inherit from `PianoKeys` to run you
 Each key is associated to a key number value. The minimal value `0` corresponds to a `C` note like in the MIDI standard. Unlike MIDI, there is no specified upper bound for the key number values.
 
 The `PianoKeys` objects exposes its state via the following properties:
-- `keys`: an array of pressed key values.
+- `pressedKeys`: an array of pressed key values.
 - `hoveredKey`: the value of the key being hovered (or null if there isn't).
 
 ## Listening to key events
 
 You can react to key events using standard DOM events. The available events are :
+- `keydown`: fired whenever a key is pressed.
+- `keyup`: fired whenever a key is released.
 - `keychange`: fired whenever a new key was pressed or a key was released.
-- `keyhover`: fired whenever a key was hovered.
+- `keychange`: fired whenever the pressed keys change.
+- `keyhover`: fired whenever the hovered key changes.
 
 ```javascript
   const pianoKeys = document.querySelector('#piano-key');
+
+  pianoKeys.addEventListener('keydown', (event) => {
+    console.log("Key pressed", event.keyNumber);
+  });
+
+  pianoKeys.addEventListener('keyhover', (event) => {
+    console.log("Key released", event.keyNumber);
+  });
 
   pianoKeys.addEventListener('keyhover', () => {
     console.log("Mouse is over key", pianoKeys.hoveredKey);
   });
 
   pianoKeys.addEventListener('keychange', () => {
-    console.log("Keys being pressed", pianoKeys.keys.join(', '));
+    console.log("Keys being pressed", pianoKeys.pressedKeys.join(', '));
   });
 ```

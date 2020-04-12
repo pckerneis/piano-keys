@@ -92,8 +92,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const pianoKeys = document.querySelector('piano-keys');
   pianoKeys.addEventListener('keychange', () => {
-    const notes = pianoKeys.keys.length === 0 ?
-        'none' : pianoKeys.keys.map(key => midiNoteName(key)).join(', ');
+    const notes = pianoKeys.pressedKeys.length === 0 ?
+        'none' : pianoKeys.pressedKeys.map(key => midiNoteName(key)).join(', ');
     noteDisplay.innerText = `Pressed: ${notes}`;
   });
 

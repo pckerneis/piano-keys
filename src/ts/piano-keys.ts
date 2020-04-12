@@ -4,6 +4,28 @@ declare class ResizeObserver {
 }
 
 /**
+ * Event emitted when a piano key is pressed.
+ */
+export class PianoKeyDownEvent extends CustomEvent<number> {
+  constructor(public readonly keyNumber: number) {
+    super('keydown', {
+      detail: keyNumber
+    });
+  }
+}
+
+/**
+ * Event emitted when a piano key is released.
+ */
+export class PianoKeyUpEvent extends CustomEvent<number> {
+  constructor(public readonly keyNumber: number) {
+    super('keyup', {
+      detail: keyNumber
+    });
+  }
+}
+
+/**
  * The layout for the keys. See {@link PianoKeys.layout}.
  */
 export enum PianoKeysLayout {
@@ -118,7 +140,7 @@ export class PianoKeys extends HTMLElement {
    * @remark this returns the actual array used internally to render the keys. You shouldn't mutate it yourself unless you
    * know what you're doing in order to avoid weird mouse logic behaviours. Altering the array won't trigger a redraw.
    */
-  public get keys(): number[] {
+  public get pressedKeys(): number[] {
     return this._keys;
   }
 
@@ -390,13 +412,17 @@ export class PianoKeys extends HTMLElement {
       if (mode === 'toggle') {
         if (this._keys.includes(keyPressed)) {
           this._keys = this._keys.filter((v) => v !== keyPressed);
+          this.notifyKeyUp(keyPressed);
         } else {
           this._keys = [...this._keys, keyPressed];
+          this.notifyKeyDown(keyPressed);
         }
 
         this.notifyKeyChange();
       } else {
+        this.allKeysUpAndNotify();
         this._keys = [keyPressed];
+        this.notifyKeyDown(keyPressed);
         this.notifyKeyChange();
       }
     }
@@ -412,7 +438,7 @@ export class PianoKeys extends HTMLElement {
     }
 
     if (mode !== 'toggle') {
-      this._keys = [];
+      this.allKeysUpAndNotify();
       this.notifyKeyChange();
     }
 
@@ -433,7 +459,7 @@ export class PianoKeys extends HTMLElement {
 
     if (this._hoveredKey != newHoveredKey) {
       this._hoveredKey = newHoveredKey;
-      this.dispatchEvent(new CustomEvent('keyhover'));
+      this.notifyKeyHover();
     }
 
     if (mode === 'none') {
@@ -445,13 +471,15 @@ export class PianoKeys extends HTMLElement {
 
     if (event.buttons == 0 && mode != 'toggle') {
       if (this._keys.length > 0) {
-        this._keys = [];
+        this.allKeysUpAndNotify();
         changed = true;
       }
     } else {
       if (mode === 'slide') {
         if (this._keys.length !== 1 || this._keys[0] !== this._hoveredKey) {
+          this.allKeysUpAndNotify();
           this._keys = [this._hoveredKey];
+          this.notifyKeyDown(this._hoveredKey);
           changed = true;          
         }
       }
@@ -466,7 +494,7 @@ export class PianoKeys extends HTMLElement {
 
   private handleMouseLeave(/* event: MouseEvent */): void {
     this._hoveredKey = null;
-    this.dispatchEvent(new CustomEvent('keyhover'));
+    this.notifyKeyHover();
     
     this.draw();
   }
@@ -489,8 +517,29 @@ export class PianoKeys extends HTMLElement {
     return result;
   }
 
+  private allKeysUpAndNotify() {
+    const keys = [...this._keys];
+    this._keys = [];
+
+    for (const key of keys) {
+      this.notifyKeyUp(key);
+    }
+  }
+
+  private notifyKeyDown(key: number) {
+    this.dispatchEvent(new PianoKeyDownEvent(key));
+  }
+
+  private notifyKeyUp(key: number) {
+    this.dispatchEvent(new PianoKeyUpEvent(key));
+  }
+
   private notifyKeyChange(): void {
     this.dispatchEvent(new CustomEvent('keychange'));
+  }
+
+  private notifyKeyHover(): void {
+    this.dispatchEvent(new CustomEvent('keyhover'));
   }
 
   private resize(): void {
