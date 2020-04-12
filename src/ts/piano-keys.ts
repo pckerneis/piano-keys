@@ -645,5 +645,3 @@ const CSS_STYLE = `
   height: 100%;
 }
 `;
-
-customElements.define('piano-keys', PianoKeys);

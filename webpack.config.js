@@ -1,7 +1,7 @@
 const path = require('path');
 
 module.exports = {
-  entry: './src/ts/piano-keys.ts',
+  entry: './src/ts/main.ts',
   devtool: 'source-map',
   module: {
     rules: [
