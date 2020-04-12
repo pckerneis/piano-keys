@@ -100,7 +100,6 @@ The `PianoKeys` objects exposes its state via the following properties:
 You can react to key events using standard DOM events. The available events are :
 - `keydown`: fired whenever a key is pressed.
 - `keyup`: fired whenever a key is released.
-- `keychange`: fired whenever a new key was pressed or a key was released.
 - `keychange`: fired whenever the pressed keys change.
 - `keyhover`: fired whenever the hovered key changes.
 
@@ -111,7 +110,7 @@ You can react to key events using standard DOM events. The available events are 
     console.log("Key pressed", event.keyNumber);
   });
 
-  pianoKeys.addEventListener('keyhover', (event) => {
+  pianoKeys.addEventListener('keyup', (event) => {
     console.log("Key released", event.keyNumber);
   });
 
