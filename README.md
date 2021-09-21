@@ -8,7 +8,6 @@
 
 **piano-keys** is a lightweight piano keyboard that can be customized and interacted with the mouse. It is based on Custom Elements and Canvas APIs.
 
-- See a [live demo](https://pckerneis.com/piano-keys-demo/)
 - See the [usage guide](https://pckerneis.github.io/piano-keys/#/)
 
 ## Installation
